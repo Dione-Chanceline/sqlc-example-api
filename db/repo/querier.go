@@ -10,8 +10,10 @@ import (
 
 type Querier interface {
 	CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error)
+	GetAttachmentsByMessage(ctx context.Context, messageID string) ([]Attachment, error)
 	GetMessageByID(ctx context.Context, id string) (Message, error)
 	GetMessagesByThread(ctx context.Context, thread string) ([]Message, error)
+	InsertAttachment(ctx context.Context, arg InsertAttachmentParams) (Attachment, error)
 }
 
 var _ Querier = (*Queries)(nil)

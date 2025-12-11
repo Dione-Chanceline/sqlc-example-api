@@ -1,15 +1,14 @@
-// Package main implements the entry point for the application.
 package main
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"net/url"
 	"os"
 
 	"github.com/ardanlabs/conf/v3"
+	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 
@@ -17,7 +16,7 @@ import (
 	"github.com/Iknite-Space/sqlc-example-api/db/repo"
 )
 
-// DBConfig holds the database configuration. This struct is populated from the .env in the current directory.
+// DBConfig holds the database configuration.
 type DBConfig struct {
 	DBUser      string `conf:"env:DB_USER,required"`
 	DBPassword  string `conf:"env:DB_PASSWORD,required,mask"`
@@ -27,7 +26,7 @@ type DBConfig struct {
 	TLSDisabled bool   `conf:"env:DB_TLS_DISABLED"`
 }
 
-// Config holds the application configuration. This struct is populated from the .env in the current directory.
+// Config holds the application config.
 type Config struct {
 	ListenPort     uint16 `conf:"env:LISTEN_PORT,required"`
 	MigrationsPath string `conf:"env:MIGRATIONS_PATH,required"`
@@ -35,97 +34,82 @@ type Config struct {
 }
 
 func main() {
-
-	// We call run() here because main cannot return an error. If run() returns an error we print the error and exit.
-	// This is a common pattern in Go applications to handle errors gracefully.
-	err := run()
-	if err != nil {
+	if err := run(); err != nil {
 		fmt.Println("Error:", err)
 		os.Exit(1)
 	}
 }
 
-// run initializes the application and starts the server.
-// It loads the configuration, sets up the database connection, and starts the HTTP server.
 func run() error {
 	ctx := context.Background()
 	config := Config{}
 
-	// We load the configuration from the .env file in the current directory and populate the Config struct.
-	// If the .env file is not found, or if any of the required configuration values are missing, an error is returned.
-	err := LoadConfig(&config)
-	if err != nil {
+	// Load .env + config
+	if err := LoadConfig(&config); err != nil {
 		fmt.Println("Error loading config:", err)
-		fmt.Println("Have you configured your .env with the required variables?")
 		return err
 	}
 
-	// We use the configuration values to get the database connection URL.
-	dbConnectionURL := getPostgresConnectionURL(config.DB)
-	db, err := pgxpool.New(ctx, dbConnectionURL)
+	// Database setup
+	dbURL := getPostgresConnectionURL(config.DB)
+	db, err := pgxpool.New(ctx, dbURL)
 	if err != nil {
-		return fmt.Errorf("failed to open database: %w", err)
+		return fmt.Errorf("failed to connect to DB: %w", err)
 	}
 	defer db.Close()
 
-	// We use the database connection to run the migrations.
-	// This will create or update all the required database tables.
-	err = repo.Migrate(dbConnectionURL, config.MigrationsPath)
-	if err != nil {
-		return fmt.Errorf("failed to run migrations: %w", err)
+	// Run migrations
+	if err := repo.Migrate(dbURL, config.MigrationsPath); err != nil {
+		return fmt.Errorf("failed running migrations: %w", err)
 	}
 
-	querier := repo.New(db)
+	// Initialize SQLC querier
+	queries := repo.New(db)
 
-	// We create a new http handler using the database querier.
-	handler := api.NewMessageHandler(querier).WireHttpHandler()
+	// Initialize Gin router
+	router := gin.Default()
 
-	// And finally we start the HTTP server on the configured port.
-	err = http.ListenAndServe(fmt.Sprintf(":%d", config.ListenPort), handler)
-	if err != nil {
-		fmt.Println("Error starting server:", err)
-	}
+	// Register message routes
+	messageHandler := api.NewMessageHandler(queries)
+	messageHandler.RegisterRoutes(router)
 
-	return nil
+	// Register attachment routes
+	attachmentHandler := api.NewAttachmentHandler(queries)
+	attachmentHandler.RegisterRoutes(router)
+
+	// Start server
+	return router.Run(fmt.Sprintf(":%d", config.ListenPort))
 }
 
-// LoadConfig reads configuration from file or environment variables.
+// LoadConfig reads configuration from env file.
 func LoadConfig(cfg *Config) error {
 	if _, err := os.Stat(".env"); err == nil {
-		err = godotenv.Load()
-		if err != nil {
-			return fmt.Errorf("failed to load env file: %w", err)
+		if err := godotenv.Load(); err != nil {
+			return fmt.Errorf("failed to load .env: %w", err)
 		}
 	}
 
 	_, err := conf.Parse("", cfg)
-	if err != nil {
-		if errors.Is(err, conf.ErrHelpWanted) {
-			return err
-		}
-
+	if errors.Is(err, conf.ErrHelpWanted) {
 		return err
 	}
-
-	return nil
+	return err
 }
 
-// getPostgresConnectionURL constructs the PostgreSQL connection URL from the provided configuration.
+// Generate DB URL
 func getPostgresConnectionURL(config DBConfig) string {
-	queryValues := url.Values{}
+	values := url.Values{}
 	if config.TLSDisabled {
-		queryValues.Add("sslmode", "disable")
+		values.Add("sslmode", "disable")
 	} else {
-		queryValues.Add("sslmode", "require")
+		values.Add("sslmode", "require")
 	}
 
-	dbURL := url.URL{
+	return (&url.URL{
 		Scheme:   "postgres",
 		User:     url.UserPassword(config.DBUser, config.DBPassword),
 		Host:     fmt.Sprintf("%s:%d", config.DBHost, config.DBPort),
 		Path:     config.DBName,
-		RawQuery: queryValues.Encode(),
-	}
-
-	return dbURL.String()
+		RawQuery: values.Encode(),
+	}).String()
 }

@@ -84,3 +84,9 @@ func (h *MessageHandler) handleGetThreadMessages(c *gin.Context) {
 		"messages": messages,
 	})
 }
+
+func (h *MessageHandler) RegisterRoutes(r *gin.Engine) {
+	r.POST("/message", h.handleCreateMessage)
+	r.GET("/message/:id", h.handleGetMessage)
+	r.GET("/thread/:id/messages", h.handleGetThreadMessages)
+}

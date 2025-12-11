@@ -5,8 +5,17 @@
 package repo
 
 import (
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type Attachment struct {
+	ID        uuid.UUID          `json:"id"`
+	MessageID string             `json:"message_id"`
+	FileUrl   string             `json:"file_url"`
+	FileType  string             `json:"file_type"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
 
 type Message struct {
 	ID        string           `json:"id"`
