@@ -44,7 +44,11 @@ func (h *AttachmentHandler) handleUploadAttachment(c *gin.Context) {
 	}
 
 	// Ensure uploads folder exists
-	os.MkdirAll("./uploads", os.ModePerm)
+	err = os.MkdirAll("./uploads", os.ModePerm)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create upload directory"})
+		return
+	}
 
 	// Save file locally
 	savePath := "./uploads/" + fileHeader.Filename
