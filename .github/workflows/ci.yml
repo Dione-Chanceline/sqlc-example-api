@@ -1,17 +1,10 @@
-name: CI Workflow
+name: Test Actions
 
-on:
-  push:
-    branches:
-      - main
+on: [push]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - run: echo "GitHub Actions is working!"
 
-      - name: Run a simple command
-        run: echo "Hello, CI/CD with GitHub Actions!"
