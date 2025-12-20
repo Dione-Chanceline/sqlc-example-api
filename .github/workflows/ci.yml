@@ -2,48 +2,38 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   ci:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout repository
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️⃣ Setup Go
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.25"
+          go-version: "1.23"
 
-      # 3️⃣ Download dependencies
-      - name: Install dependencies
-        run: go mod download
+      - name: Verify Go version
+        run: go version
 
-      # 4️⃣ Vulnerability scan (govulncheck)
       - name: Run govulncheck
         uses: golang/govulncheck-action@v1
         with:
-          args: ./...
+          packages: ./...
 
-      # 5️⃣ Lint code (golangci-lint)
-        -- name: Run golangci-lint
+      - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-        version: v2.1.2
+          version: v2.1.2
 
-
-      # 6️⃣ Run tests
       - name: Run tests
         run: go test ./...
 
-      # 7️⃣ Build binary (only runs if everything above passes)
-      - name: Build API binary
+      - name: Build binary
         run: go build -o ./bin/api ./cmd/api/...
-
-
