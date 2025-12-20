@@ -32,11 +32,11 @@ jobs:
           args: ./...
 
       # 5️⃣ Lint code (golangci-lint)
-      - name: Run golangci-lint
+        -- name: Run golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.55.2
-          args: run ./...
+        version: v2.1.2
+
 
       # 6️⃣ Run tests
       - name: Run tests
