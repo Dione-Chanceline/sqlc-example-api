@@ -30,7 +30,7 @@ jobs:
         with:
           version: v2.1.2
 
-      - name: Run tests
+      - name: Run test
         run: go test ./...
 
       - name: Build binary
