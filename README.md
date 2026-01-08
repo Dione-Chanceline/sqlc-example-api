@@ -31,3 +31,4 @@ cd sqlc-example-api
 
     The server will start, and it will print the available endpoints.
 # Improved-code-by-allowing-File-Image-Attachments-to-Messages
+# CI test
