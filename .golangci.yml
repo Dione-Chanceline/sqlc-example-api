@@ -2,8 +2,10 @@ run:
   timeout: 5m
 
 linters:
-  disable:
-    - typecheck
+  enable:
+    - errcheck
+    - govet
 
 issues:
   exclude-use-default: false
+
