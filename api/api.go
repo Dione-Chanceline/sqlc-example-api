@@ -66,8 +66,6 @@ func (h *MessageHandler) handleGetMessage(c *gin.Context) {
 }
 
 // hellooooo
-//hiiiiiii
-//hiiiiiiiii
 
 func (h *MessageHandler) handleGetThreadMessages(c *gin.Context) {
 	id := c.Param("id")
