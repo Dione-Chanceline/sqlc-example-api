@@ -32,9 +32,6 @@ func (h *MessageHandler) WireHttpHandler() http.Handler {
 	return r
 }
 
-////heyhjjjkk
-//ghhjjjkk
-
 func (h *MessageHandler) handleCreateMessage(c *gin.Context) {
 	var req repo.CreateMessageParams
 	err := c.ShouldBindBodyWithJSON(&req)
