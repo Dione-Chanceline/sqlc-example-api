@@ -65,6 +65,7 @@ func (h *MessageHandler) handleGetMessage(c *gin.Context) {
 	c.JSON(http.StatusOK, message)
 }
 
+// hellooooo
 func (h *MessageHandler) handleGetThreadMessages(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
