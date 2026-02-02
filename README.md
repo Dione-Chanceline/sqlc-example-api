@@ -29,5 +29,5 @@ cd sqlc-example-api
 * Run the Application:
     `go run cmd/api/...`
 
-    The server will start, and it will print the available endpoints.
+    The server will start, and it will print the available endpoints.....
 # Improved-code-by-allowing-File-Image-Attachments-to-Messages
