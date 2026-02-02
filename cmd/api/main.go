@@ -43,7 +43,7 @@ func main() {
 func run() error {
 	ctx := context.Background()
 	config := Config{}
-	//commen
+	//comments
 	// Load .env + config
 	if err := LoadConfig(&config); err != nil {
 		fmt.Println("Error loading config:", err)
